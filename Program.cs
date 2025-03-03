@@ -10,7 +10,6 @@ class Program
     {
         Console.WriteLine("Procesando pedidos...");
 
-        // Simulación de múltiples pedidos
         var pedidos = new List<Task>
         {
             ProcesarPedido(1),
@@ -20,7 +19,6 @@ class Program
             ProcesarPedido(5)
         };
 
-        // Esperar a que el primer pedido termine para continuar con otras tareas
         await Task.WhenAny(pedidos);
 
         Console.WriteLine("Al menos un pedido ha sido completado.");
@@ -34,14 +32,12 @@ class Program
 
         try
         {
-            // Usando Task.Factory.StartNew y TaskCreationOptions.AttachedToParent
             var validacion = Task.Factory.StartNew(async () =>
             {
                 await Task.Delay(1000);
                 Console.WriteLine($"Pedido {pedidoId}: Validado.");
             }, TaskCreationOptions.AttachedToParent);
 
-            // Usando Task.Run para el procesamiento del pago
             var procesamientoPago = Task.Run(async () =>
             {
                 await Task.Delay(2000);
@@ -50,7 +46,6 @@ class Program
                 Console.WriteLine($"Pedido {pedidoId}: Pago procesado.");
             });
 
-            // Usando ContinueWith con TaskContinuationOptions.OnlyOnRanToCompletion
             var factura = procesamientoPago.ContinueWith(async t =>
             {
                 if (t.Status == TaskStatus.RanToCompletion)
@@ -60,7 +55,6 @@ class Program
                 }
             }, TaskContinuationOptions.OnlyOnRanToCompletion).Unwrap();
 
-            // Manejo de error usando TaskContinuationOptions.OnlyOnFaulted
             procesamientoPago.ContinueWith(t =>
             {
                 if (t.IsFaulted)
@@ -69,7 +63,6 @@ class Program
                 }
             }, TaskContinuationOptions.OnlyOnFaulted);
 
-            // Manejo de cancelación usando TaskContinuationOptions.OnlyOnCanceled
             procesamientoPago.ContinueWith(t =>
             {
                 if (t.IsCanceled)
@@ -78,7 +71,6 @@ class Program
                 }
             }, TaskContinuationOptions.OnlyOnCanceled);
 
-            // Esperar la validación y el pago
             await validacion;
             await procesamientoPago;
             await factura;
